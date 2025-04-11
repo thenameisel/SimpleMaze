@@ -6,10 +6,14 @@ namespace SimpleMaze
 {
     public class Game1 : Game
     {
+        private float _speed = 100f;
+
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
 
         Sprite player;
+
+
 
         public Game1()
         {
@@ -30,18 +34,16 @@ namespace SimpleMaze
             _spriteBatch = new SpriteBatch(GraphicsDevice);
 
             // TODO: use this.Content to load your game content here
-            player = new Player(Content.Load<Texture2D>("shroomcatright1"), new Vector2(100, 100), 30f);
+            player = new Player(Content.Load<Texture2D>("shroomcatright1"), new Vector2(100, 100), _speed);
         }
 
         protected override void Update(GameTime gameTime)
         {
             if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
                 Exit();
-
-            // TODO: Add your update logic here
-
+            
             player.Update(gameTime);
-
+            
             base.Update(gameTime);
         }
 
