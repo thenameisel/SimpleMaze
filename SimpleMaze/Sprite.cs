@@ -12,16 +12,26 @@ namespace SimpleMaze
     {
         public Texture2D texture;
         public Vector2 position;
+        public int textureFrameRow = 0; 
 
-        public Sprite(Texture2D texture, Vector2 position)
+        public int textureCounter = 0;
+        public int textureFrame = 0;
+        public int textureNumFrames;
+        public int textureSize;
+        public Sprite(Texture2D texture, Vector2 position, int textureSize)
         {
             this.texture = texture;
             this.position = position;
+            this.textureSize = textureSize;
         }
 
         public virtual void Update(GameTime gameTime)
         {
             //update logic for the sprite
+        }
+        public virtual void Animate()
+        {
+            //animation logic for the sprite
         }
     }
 }

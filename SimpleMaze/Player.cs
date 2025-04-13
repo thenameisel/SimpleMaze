@@ -1,9 +1,12 @@
 ﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Net.Mime;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -12,65 +15,83 @@ namespace SimpleMaze
     internal class Player : Sprite
     {
         private float speed;
-        private bool wPressed = false;
-        private bool aPressed = false;
-        private bool sPressed = false;
-        private bool dPressed = false;
+        private Func<Rectangle, bool> _collisionCheck;
 
-
-        public Player(Texture2D texture, Vector2 position, float speed) : base(texture, position)
+        public Player(Texture2D texture, Vector2 position, float speed, int textureSize, Func<Rectangle, bool> collisionCheck) : base(texture, position, textureSize)
         {
             this.speed = speed;
+            _collisionCheck = collisionCheck;
+            base.textureNumFrames = 4; // I know this is four, but could be made dynamic by math of atlas width / sprite width
         }
         
         public override void Update(GameTime gameTime) 
         {
             base.Update(gameTime);
+            Vector2 movement = Vector2.Zero;
+            bool isMoving = false;
 
-            if(!wPressed && Keyboard.GetState().IsKeyDown(Keys.W))
+            // Handle input and movement
+            if (Keyboard.GetState().IsKeyDown(Keys.W))
             {
-                wPressed = true;
+                movement.Y -= speed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                isMoving = true;
+                textureFrameRow = 4;
             }
-            else if (wPressed && Keyboard.GetState().IsKeyUp(Keys.W))
+            if (Keyboard.GetState().IsKeyDown(Keys.S))
             {
-                wPressed = false;
+                movement.Y += speed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                isMoving = true;
+                textureFrameRow = 6;
             }
-
-            if (!aPressed && Keyboard.GetState().IsKeyDown(Keys.A))
+            if (Keyboard.GetState().IsKeyDown(Keys.A))
             {
-                aPressed = true;
+                movement.X -= speed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                isMoving = true;
+                textureFrameRow = 2; 
             }
-            else if (aPressed && Keyboard.GetState().IsKeyUp(Keys.A))
+            if (Keyboard.GetState().IsKeyDown(Keys.D))
             {
-                aPressed = false;
-            }
-
-            if (!sPressed && Keyboard.GetState().IsKeyDown(Keys.S))
-            {
-                sPressed = true;
-                
-            }
-            else if (sPressed && Keyboard.GetState().IsKeyUp(Keys.S))
-            {
-                sPressed = false;
-            }
-
-            if (!dPressed && Keyboard.GetState().IsKeyDown(Keys.D))
-            {
-                dPressed = true;
-                
-            }
-            else if (dPressed && Keyboard.GetState().IsKeyUp(Keys.D))
-            {
-                dPressed = false;
+                movement.X += speed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+                isMoving = true;
+                textureFrameRow = 0; 
             }
 
-            if (wPressed) position.Y -= speed * (float)gameTime.ElapsedGameTime.TotalSeconds;
-            if (aPressed) position.X -= speed * (float)gameTime.ElapsedGameTime.TotalSeconds;
-            if (sPressed) position.Y += speed * (float)gameTime.ElapsedGameTime.TotalSeconds;
-            if (dPressed) position.X += speed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+            if (!isMoving && textureFrameRow % 2 == 0)
+            {
+                textureFrameRow += 1;
+            }
+            Animate();
+            
 
-            //position.X += speed * (float)gameTime.ElapsedGameTime.TotalSeconds;
+            Rectangle proposedBounds = new Rectangle(
+                (int)(position.X + movement.X),
+                (int)(position.Y + movement.Y),
+                textureSize, textureSize);
+
+            if (!_collisionCheck(proposedBounds))
+            {
+                position += movement;
+            }
+
+        }
+
+
+        public override void Animate()
+        {
+            base.Animate();
+            //animation logic for the player
+
+            textureCounter++;
+            if (textureCounter >= 15)
+            {
+                textureCounter = 0;
+                textureFrame++;
+                if (textureFrame >= textureNumFrames)
+                {
+                    textureFrame = 0;
+                }
+            }
+
         }
     }
     
