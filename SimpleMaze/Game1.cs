@@ -70,20 +70,31 @@ namespace SimpleMaze
             _gameTimeElapsed = TimeSpan.FromMinutes(2);
             _timerRunning = false;
 
-            var map01 = Path.Combine(Content.RootDirectory, "map01.csv");
-            tileMap = LoadMap(map01);
-            var map01Col = Path.Combine(Content.RootDirectory, "map01Col.csv");
-            tileMapCol = LoadMap(map01Col);
+            var map02 = Path.Combine(Content.RootDirectory, "map02.csv");
+            tileMap = LoadMap(map02);
+            var map02Col = Path.Combine(Content.RootDirectory, "mapCol02.csv");
+            tileMapCol = LoadMap(map02Col);
             textureStore = new()
             {
-                new Rectangle(0, _enviroSize*2, _enviroSize,_enviroSize),
-                new Rectangle(_enviroSize, _enviroSize*2, _enviroSize,_enviroSize),
+                //floor tiles
                 new Rectangle(0, 0, _enviroSize,_enviroSize),
                 new Rectangle(_enviroSize, 0, _enviroSize,_enviroSize),
-                new Rectangle(_enviroSize *2, 0, _enviroSize,_enviroSize),
-                new Rectangle(_enviroSize *3, 0, _enviroSize,_enviroSize),
+                new Rectangle(_enviroSize*2, 0, _enviroSize,_enviroSize),
+                new Rectangle(_enviroSize*3, 0, _enviroSize,_enviroSize),
                 new Rectangle(0, _enviroSize, _enviroSize,_enviroSize),
+                new Rectangle(),
+                new Rectangle(),
+                new Rectangle(),
+                //wall tiles
+                new Rectangle(0, _enviroSize*2, _enviroSize,_enviroSize),
+                new Rectangle(_enviroSize, _enviroSize*2, _enviroSize,_enviroSize),
+                new Rectangle(),
+                new Rectangle(),
+                //misc tiles
                 new Rectangle(0, _enviroSize*3, _enviroSize,_enviroSize),
+                new Rectangle(),
+                new Rectangle(),
+                new Rectangle(),
             };
         }
 
@@ -91,20 +102,20 @@ namespace SimpleMaze
         protected override void Initialize()
         {
             _camera = new Camera(_graphics.GraphicsDevice.Viewport);
-            _timerFont = Content.Load<SpriteFont>("File");
 
+            _spriteBatch = new SpriteBatch(GraphicsDevice);
 
             base.Initialize();
         }
 
         protected override void LoadContent()
         {
-            _spriteBatch = new SpriteBatch(GraphicsDevice);
-            menuFont = Content.Load<SpriteFont>("File");
 
+            menuFont = Content.Load<SpriteFont>("File");
+            
             tileAtlas = Content.Load<Texture2D>("enviromentatlas"); 
             
-            player = new Player(Content.Load<Texture2D>("shroomcatatlas"), new Vector2(193, 193), _speed, _playerTextureSize, (bounds) => IsColliding(bounds));
+            player = new Player(Content.Load<Texture2D>("shroomcatatlas"), new Vector2(64, 64), _speed, _playerTextureSize, (bounds) => IsColliding(bounds));
             
         }
 
@@ -140,8 +151,9 @@ namespace SimpleMaze
 
                     _camera.Update(player.position, player.textureSize);
 
-
-                    if(player.position.X >= 960 && player.position.Y >= 960)
+                    //TODO: this needs to be easily adjutable per map, maybe tie into the collison map?
+                    //37/16 
+                    if (player.position.X >= 2304 && player.position.X <= 2324 && player.position.Y >= 960 && player.position.Y <= 980)
                     {
                         winCondition = true;
                         _scene = Scene.END;
@@ -245,7 +257,7 @@ namespace SimpleMaze
 
                     string timerText = FormatTime(_gameTimeElapsed);
                     Vector2 timerPosition = new Vector2(_camera.Position.X, _camera.Position.Y); // Top-left corner
-                    _spriteBatch.DrawString(_timerFont, timerText, timerPosition, Color.White);
+                    _spriteBatch.DrawString(menuFont, timerText, timerPosition, Color.White);
 
                     _spriteBatch.End();
 
@@ -365,33 +377,33 @@ namespace SimpleMaze
                 _playerTextureSize,
                 _playerTextureSize);
         }
-        public List<Rectangle> GetCollidableTiles(Rectangle bounds)
-        {
-            List<Rectangle> collidableTiles = new List<Rectangle>();
+        //public List<Rectangle> GetCollidableTiles(Rectangle bounds)
+        //{
+        //    List<Rectangle> collidableTiles = new List<Rectangle>();
 
-            // Convert bounds to tile coordinates
-            int leftTile = bounds.Left / _enviroSize;
-            int rightTile = bounds.Right / _enviroSize;
-            int topTile = bounds.Top / _enviroSize;
-            int bottomTile = bounds.Bottom / _enviroSize;
+        //    // Convert bounds to tile coordinates
+        //    int leftTile = bounds.Left / _enviroSize;
+        //    int rightTile = bounds.Right / _enviroSize;
+        //    int topTile = bounds.Top / _enviroSize;
+        //    int bottomTile = bounds.Bottom / _enviroSize;
 
-            // Check all potentially colliding tiles
-            for (int y = topTile; y <= bottomTile; y++)
-            {
-                for (int x = leftTile; x <= rightTile; x++)
-                {
-                    if (tileMapCol.TryGetValue(new Vector2(x, y), out int tileValue) && tileValue > 0)
-                    {
-                        collidableTiles.Add(new Rectangle(
-                            x * _enviroSize,
-                            y * _enviroSize,
-                            _enviroSize,
-                            _enviroSize));
-                    }
-                }
-            }
-            return collidableTiles;
-        }
+        //    // Check all potentially colliding tiles
+        //    for (int y = topTile; y <= bottomTile; y++)
+        //    {
+        //        for (int x = leftTile; x <= rightTile; x++)
+        //        {
+        //            if (tileMapCol.TryGetValue(new Vector2(x, y), out int tileValue) && tileValue >= 0)
+        //            {
+        //                collidableTiles.Add(new Rectangle(
+        //                    x * _enviroSize,
+        //                    y * _enviroSize,
+        //                    _enviroSize,
+        //                    _enviroSize));
+        //            }
+        //        }
+        //    }
+        //    return collidableTiles;
+        //}
         public List<Rectangle> GetIntersectingTiles(Rectangle bounds)
         {
             List<Rectangle> intersectingTiles = new();
@@ -408,7 +420,7 @@ namespace SimpleMaze
                 for (int x = leftTile; x <= rightTile; x++)
                 {
                     // Only add tiles that are actually collidable
-                    if (tileMapCol.TryGetValue(new Vector2(x, y), out int tileValue) && tileValue == 0)
+                    if (tileMapCol.TryGetValue(new Vector2(x, y), out int tileValue) && tileValue >= 0)
                     {
                         intersectingTiles.Add(new Rectangle(
                             x * _enviroSize,
